@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Math equations renderer</title>
+  <link href="https://notes.grepwise.com/global.css" rel="stylesheet">
+</head>
+
+<body>
+  <p> Write math equations for the browser in html in a simple format, the script converts it into math ml </p>
+
+  <p>I got inspiration from the math typesetting from typst https://typst.app/docs/reference/math/. But as of now there isn't a simple way to write math equations in the browser html.
+  </p>
+  <h2>Tests</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Input</th>
+        <th>Output</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>
+          <code>a^2</code>
+        </td>
+        <td>
+          <math>
+            <msup>
+              <mi>a</mi>
+              <mn>2</mn>
+            </msup>
+          </math>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <code>a_2</code>
+        </td>
+        <td>
+          <math>
+            <msub>
+              <mi>a</mi>
+              <mn>2</mn>
+            </msub>
+          </math>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <code>a/b</code>
+        </td>
+        <td>
+          <math>
+            <mfrac>
+              <mi>a</mi>
+              <mi>b</mi>
+            </mfrac>
+          </math>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <code>(a+b)/c</code>
+        </td>
+        <td>
+          <math display="block">
+            <mfrac>
+              <mrow>
+                <mi>a</mi>
+                <mo>+</mo>
+                <mi>b</mi>
+              </mrow>
+              <mi>c</mi>
+            </mfrac>
+          </math>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <code>sqrt(2)</code>
+        </td>
+        <td>
+          <math>
+            <msqrt>
+              <mn>2</mn>
+            </msqrt>
+          </math>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <code> int_a^b(x^2) </code>
+        </td>
+        <td>
+          <math display="block">
+            <msubsup>
+              <mo>∫</mo>
+              <mi>a</mi>
+              <mi>b</mi>
+            </msubsup>
+            <msup>
+              <mi>x</mi>
+              <mn>2</mn>
+            </msup>
+          </math>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <code>a -> b</code>
+        </td>
+        <td>
+          <math>
+            <mrow>
+              <mi>a</mi>
+              <mo>→</mo>
+              <mi>b</mi>
+            </mrow>
+          </math>
+        </td>
+      </tr>
+
+
+    </tbody>
+  </table>
+
+</body>
+
+</html>
