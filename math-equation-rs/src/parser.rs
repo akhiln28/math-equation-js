@@ -100,18 +100,18 @@ impl<'a> Parser<'a> {
     }
 
     pub fn expression(&self) -> Result<Node<Expression>, ParserError> {
-        let primary_expr = self.primary_expression()?;
+        let unary_expr = self.unary_expression()?;
         let mut matched = Vec::new();
         self.multispace0()?;
         while let Ok(op) = self.binary_operator() {
             self.multispace0()?;
-            let simple_expr = self.primary_expression()?;
-            matched.push((op, simple_expr));
+            let unary_expr = self.unary_expression()?;
+            matched.push((op, unary_expr));
             self.multispace0()?;
         }
-        let mut operand_stack: Vec<Node<Expression>> = vec![primary_expr];
+        let mut operand_stack: Vec<Node<Expression>> = vec![unary_expr];
         let mut operator_stack: Vec<Node<BinaryOperator>> = Vec::new();
-        for (op, simple_expr) in matched {
+        for (op, unary_expr) in matched {
             while !operator_stack.is_empty()
                 && precedence(&operator_stack.last().unwrap().node) >= precedence(&op.node)
             {
@@ -134,7 +134,7 @@ impl<'a> Parser<'a> {
                     )),
                 ));
             }
-            operand_stack.push(simple_expr);
+            operand_stack.push(unary_expr);
             operator_stack.push(op);
         }
         while !operator_stack.is_empty() {
@@ -160,24 +160,37 @@ impl<'a> Parser<'a> {
         Ok(operand_stack.pop().unwrap())
     }
 
-    // ... other methods ...
-
     pub fn unary_expression(&self) -> Result<Node<Expression>, ParserError> {
         let start = self.pos();
         if let Ok(op) = self.unary_operator() {
-            let expr = self.primary_expression()?;
+            let primary_expr = self.primary_expression()?;
             return Ok(Node::new(
                 Span::span(start, self.pos()),
                 Expression::UnaryExpression(Node::new(
                     Span::span(start, self.pos()),
                     UnaryExpression {
-                        op,
-                        expr: Box::new(expr),
+                        op: Some(op),
+                        expr: Box::new(primary_expr),
+                        is_prefix: true,
                     },
                 )),
             ));
         }
-        self.primary_expression()
+        let primary_expr = self.primary_expression()?;
+        if let Ok(op) = self.unary_operator() {
+            return Ok(Node::new(
+                Span::span(start, self.pos()),
+                Expression::UnaryExpression(Node::new(
+                    Span::span(start, self.pos()),
+                    UnaryExpression {
+                        op: Some(op),
+                        expr: Box::new(primary_expr),
+                        is_prefix: false,
+                    },
+                )),
+            ));
+        }
+        Ok(primary_expr)
     }
 
     pub fn primary_expression(&self) -> Result<Node<Expression>, ParserError> {

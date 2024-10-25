@@ -1,6 +1,17 @@
 use std::fmt;
 use std::fmt::Debug;
 
+// expression := unary_expression ~ (binary_op ~ unary_expression)*
+// unary_expression := primary_expression | prefix_expression | postfix_expression
+// primary_expression :=  number | identifier | array | function_call | "(" ~ expression ~ ")"
+// array := "[" ~ expression ~ ("," ~ expression)* ~ "]"
+// function_call := identifier ~ ("(" ~ (expression ~ ("," ~ c_expression)*)? ~ ")")+
+// prefix_expression := unary_op ~ primary_expression
+// postfix_expression := primary_expression ~ unary_op
+// binary_op := "+" | "-" | "*" | "/" | "^" | "==" | "!=" | "&lt;" | "&gt;" | "&lt;=" | "&gt;=" | "&amp;&amp;" | "||"
+// unary_op := "-" | "!" | "++" | "--"
+// identifier := [a-zA-Z_][a-zA-Z0-9_]*
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     UnaryExpression(Node<UnaryExpression>),
@@ -10,8 +21,9 @@ pub enum Expression {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct UnaryExpression {
-    pub op: Node<UnaryOperator>,
+    pub op: Option<Node<UnaryOperator>>, // Option to handle primary expressions without an operator
     pub expr: Box<Node<Expression>>,
+    pub is_prefix: bool, // Flag to indicate if it is a prefix or postfix expression
 }
 
 #[derive(Debug, PartialEq, Clone)]
