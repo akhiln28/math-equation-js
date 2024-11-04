@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WASM Example</title>
+</head>
+
+<body>
+  <input type="text" id="expression" placeholder="Enter expression">
+  <button id="parseButton">Parse</button>
+  <pre id="result"></pre>
+
+  <!-- <script type="module"> -->
+  <!--   async function run() { -->
+  <!--     const wasm = await WebAssembly.instantiateStreaming(fetch('./math_equation_rs.wasm')); -->
+  <!--     const {parse} = wasm.instance.exports; -->
+  <!--     console.log(parse); -->
+  <!---->
+  <!--     document.getElementById('parseButton').addEventListener('click', () => { -->
+  <!--       console.log('Button clicked'); -->
+  <!--       const expression = document.getElementById('expression').value; -->
+  <!--       const result = parse(expression); -->
+  <!--       console.log('result:', result); -->
+  <!--       document.getElementById('result').textContent = result; -->
+  <!--     }); -->
+  <!--   } -->
+  <!---->
+  <!--   run(); -->
+  <!-- </script> -->
+  <script type="module">
+    async function run() {
+      const wasm = await WebAssembly.instantiateStreaming(fetch('./math_equation_rs.wasm'));
+      const {parse} = wasm.instance.exports;
+
+      document.getElementById('parseButton').addEventListener('click', () => {
+        const expression = document.getElementById('expression').value;
+        const encoder = new TextEncoder();
+        const encodedExpression = encoder.encode(expression);
+
+        const ptr = wasm.instance.exports.malloc(encodedExpression.length);
+        const memory = new Uint8Array(wasm.instance.exports.memory.buffer, ptr, encodedExpression.length);
+        memory.set(encodedExpression);
+
+        const result = parse(ptr, encodedExpression.length);
+        const resultPtr = result.ptr;
+        const resultLen = result.len;
+
+        const resultMemory = new Uint8Array(wasm.instance.exports.memory.buffer, resultPtr, resultLen);
+        const decoder = new TextDecoder('utf-8');
+        const resultString = decoder.decode(resultMemory);
+
+        document.getElementById('result').textContent = resultString;
+
+        wasm.instance.exports.free(ptr);
+        wasm.instance.exports.free(resultPtr);
+      });
+    }
+
+    run();
+  </script>
+
+</body>
+
+</html>

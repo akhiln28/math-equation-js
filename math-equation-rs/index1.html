@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Rust WASM Demo</title>
+</head>
+
+<body>
+  <input type="text" id="input" placeholder="Enter text">
+  <button onclick="processString()">Process String</button>
+  <div id="output"></div>
+
+  <script>
+    let wasmInstance = null;
+
+    // Function to convert JS string to Uint8Array
+    function stringToUint8Array(str) {
+      return new TextEncoder().encode(str);
+    }
+
+    // Function to convert Uint8Array to JS string
+    function uint8ArrayToString(array) {
+      return new TextDecoder().decode(array);
+    }
+
+    // Initialize WASM
+    WebAssembly.instantiateStreaming(fetch('math_equation_rs.wasm'))
+      .then(obj => {
+        wasmInstance = obj.instance;
+      });
+
+    function processString() {
+      const input = document.getElementById('input').value;
+      const inputBytes = stringToUint8Array(input);
+
+      // Allocate memory in WASM
+      const inputPtr = wasmInstance.exports.allocate_string(inputBytes.length);
+
+      // Copy input string to WASM memory
+      new Uint8Array(wasmInstance.exports.memory.buffer)
+        .set(inputBytes, inputPtr);
+
+      // Process string
+      const result = wasmInstance.exports.process_string(inputPtr, inputBytes.length);
+
+      // Read result from WASM memory
+      const resultBytes = new Uint8Array(
+        wasmInstance.exports.memory.buffer,
+        result.ptr,
+        result.len
+      );
+
+      // Convert result to JS string
+      const resultString = uint8ArrayToString(resultBytes);
+
+      // Display result
+      document.getElementById('output').textContent = resultString;
+
+      // Clean up
+      wasmInstance.exports.deallocate_string(inputPtr, inputBytes.length);
+      wasmInstance.exports.deallocate_string(result.ptr, result.len);
+    }
+
+    function createPerson() {
+      const name = "John Doe";
+      const nameBytes = stringToUint8Array(name);
+
+      // Allocate memory for name
+      const namePtr = wasmInstance.exports.allocate_string(nameBytes.length);
+
+      // Copy name to WASM memory
+      new Uint8Array(wasmInstance.exports.memory.buffer)
+        .set(nameBytes, namePtr);
+
+      // Create person
+      const person = wasmInstance.exports.create_person(namePtr, nameBytes.length, 30);
+
+      // Read name from person struct
+      const personNameBytes = new Uint8Array(
+        wasmInstance.exports.memory.buffer,
+        person.name_ptr,
+        person.name_len
+      );
+
+      const personName = uint8ArrayToString(personNameBytes);
+      console.log(`Person: ${personName}, Age: ${person.age}`);
+
+      // Clean up
+      wasmInstance.exports.deallocate_string(namePtr, nameBytes.length);
+      wasmInstance.exports.deallocate_string(person.name_ptr, person.name_len);
+    }
+  </script>
+</body>
+
+</html>
