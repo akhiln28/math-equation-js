@@ -10,6 +10,12 @@ mod parser;
 //     format!("{:#?}", expression)
 // }
 
+pub fn parse_math_equation(math_equation: &str) -> String {
+    let parser = parser::Parser::new(math_equation);
+    let expression = parser.math_equation().map_err(|e| format!("{:?}", e));
+    format!("{:#?}", expression)
+}
+
 #[repr(C)]
 pub struct WasmString {
     ptr: *const c_char,

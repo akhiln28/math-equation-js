@@ -1,6 +1,7 @@
 use std::fmt;
 use std::fmt::Debug;
 
+// math_equation := expression ("=" ~ expression)?
 // expression := unary_expression ~ (binary_op ~ unary_expression)*
 // unary_expression := primary_expression | prefix_expression | postfix_expression
 // primary_expression :=  number | identifier | array | function_call | "(" ~ expression ~ ")"
@@ -11,6 +12,11 @@ use std::fmt::Debug;
 // binary_op := "+" | "-" | "*" | "/" | "^" | "==" | "!=" | "&lt;" | "&gt;" | "&lt;=" | "&gt;=" | "&amp;&amp;" | "||"
 // unary_op := "-" | "!" | "++" | "--"
 // identifier := [a-zA-Z_][a-zA-Z0-9_]*
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct MathEquation {
+    pub expressions: Vec<Node<Expression>>,
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expression {

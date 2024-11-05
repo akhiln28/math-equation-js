@@ -2,8 +2,8 @@ use core::str;
 use std::{cell::RefCell, fmt::Debug, str::from_utf8};
 
 use crate::ast::{
-    Array, BinaryExpression, BinaryOperator, Expression, FunctionCall, Node, PrimaryExpression,
-    Span, UnaryExpression, UnaryOperator,
+    Array, BinaryExpression, BinaryOperator, Expression, FunctionCall, MathEquation, Node,
+    PrimaryExpression, Span, UnaryExpression, UnaryOperator,
 };
 
 pub struct Parser<'a> {
@@ -16,6 +16,18 @@ pub struct ParserError {
     pub pos: usize,
     pub message: String,
 }
+
+// math_equation := expression ("=" ~ expression)?
+// expression := unary_expression ~ (binary_op ~ unary_expression)*
+// unary_expression := primary_expression | prefix_expression | postfix_expression
+// primary_expression :=  number | identifier | array | function_call | "(" ~ expression ~ ")"
+// array := "[" ~ expression ~ ("," ~ expression)* ~ "]"
+// function_call := identifier ~ ("(" ~ (expression ~ ("," ~ c_expression)*)? ~ ")")+
+// prefix_expression := unary_op ~ primary_expression
+// postfix_expression := primary_expression ~ unary_op
+// binary_op := "+" | "-" | "*" | "/" | "^" | "==" | "!=" | "&lt;" | "&gt;" | "&lt;=" | "&gt;=" | "&amp;&amp;" | "||"
+// unary_op := "-" | "!" | "++" | "--"
+// identifier := [a-zA-Z_][a-zA-Z0-9_]*
 
 impl<'a> Parser<'a> {
     pub fn new(input: &'a str) -> Self {
@@ -97,6 +109,23 @@ impl<'a> Parser<'a> {
         } else {
             Err(self.parse_err("Unexpected end of input".to_string()))
         }
+    }
+
+    pub fn math_equation(&self) -> Result<Node<MathEquation>, ParserError> {
+        let start = self.pos();
+        let mut expression_nodes = Vec::new();
+        expression_nodes.push(self.expression()?);
+        self.multispace0()?;
+        while self.starts_with("=") {
+            self.consume();
+            expression_nodes.push(self.expression()?);
+        }
+        Ok(Node::new(
+            Span::span(start, self.pos()),
+            MathEquation {
+                expressions: expression_nodes,
+            },
+        ))
     }
 
     pub fn expression(&self) -> Result<Node<Expression>, ParserError> {
@@ -410,4 +439,11 @@ fn precedence(binary_operator: &BinaryOperator) -> u8 {
         BinaryOperator::Add | BinaryOperator::Sub => 5, // +, -
         BinaryOperator::Mul | BinaryOperator::Div | BinaryOperator::Pow => 6, // *, /, ^
     }
+}
+
+#[test]
+fn test_math_equation() {
+    let parser = Parser::new("a^2 + b^2 = c^2");
+    let math_equation = parser.math_equation().unwrap();
+    println!("{:#?}", math_equation);
 }

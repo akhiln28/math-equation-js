@@ -5,6 +5,18 @@
   * @typedef {'-'|'!'|'++'|'--'} UnaryOperator
   */
 
+// math_equation := expression ("=" ~ expression)?
+// expression := unary_expression ~ (binary_op ~ unary_expression)*
+// unary_expression := primary_expression | prefix_expression | postfix_expression
+// primary_expression :=  number | identifier | array | function_call | "(" ~ expression ~ ")"
+// array := "[" ~ expression ~ ("," ~ expression)* ~ "]"
+// function_call := identifier ~ ("(" ~ (expression ~ ("," ~ c_expression)*)? ~ ")")+
+// prefix_expression := unary_op ~ primary_expression
+// postfix_expression := primary_expression ~ unary_op
+// binary_op := "+" | "-" | "*" | "/" | "^" | "==" | "!=" | "&lt;" | "&gt;" | "&lt;=" | "&gt;=" | "&amp;&amp;" | "||"
+// unary_op := "-" | "!" | "++" | "--"
+// identifier := [a-zA-Z_][a-zA-Z0-9_]*
+
 /**
   * @template T
   */
@@ -37,6 +49,20 @@ export class Span {
   constructor(start, end) {
     this.start = start;
     this.end = end;
+  }
+}
+
+export class MathEquation {
+  /**
+    * @type {Array<AstNode<Expression>>}
+    */
+  expressions;
+
+  /**
+    * @param {Array<AstNode<Expression>>} expressions
+    */
+  constructor(expressions) {
+    this.expressions = expressions;
   }
 }
 
@@ -395,7 +421,24 @@ export class Parser {
   }
 
   /**
-    * @returns {AstNode}
+    * @returns {AstNode<Vec<AstNode<Expression>>>}
+    * @throws {Error}
+    * math_equation := expression ("=" ~ expression)?
+    */
+  mathEquation() {
+    /**
+      * @type {AstNode<Expression>[]}
+      */
+    let expressions = [];
+    expressions.push(this.expression());
+    if (this.match('=')) {
+      expressions.push(this.expression());
+    }
+    return new AstNode(new Span(0, this.pos), new MathEquation(expressions));
+  }
+
+  /**
+    * @returns {AstNode<Expression>}
     * @throws {Error}
     * expression := unaryExpression (binaryOperator unaryExpression)*
     */
